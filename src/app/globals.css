@@ -1,0 +1,205 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Fonts are loaded via next/font/google in layout.tsx — no @import needed here */
+
+:root {
+  --font-inter: 'Inter', system-ui, sans-serif;
+  --font-space-mono: 'Space Mono', Consolas, monospace;
+  --font-syncopate: 'Syncopate', system-ui, sans-serif;
+  --font-serif: 'Merriweather', Georgia, serif;
+  --line-height-typing: 2.1rem;
+
+  /* ── LIGHT MODE (default) ── */
+  --bg: 36 25% 94%;                  /* #F5E6D3 - cream parchment */
+  --surface: 33 20% 88%;             /* #EDD9C6 - aged paper */
+  --surface-raised: 33 18% 86%;      /* #E8D4C0 - light cardboard */
+  --surface-elevated: 30 17% 82%;    /* #DCC5B3 - lifted parchment */
+  --border: 30 16% 75%;              /* #D4C4B0 - wood grain */
+  --border-subtle: 33 18% 86%;       /* #E8D4C0 - very light */
+  --border-active: 25 32% 42%;       /* #8B6F47 - deep sepia */
+  --text-primary: 20 26% 15%;        /* #3E2723 - dark wood */
+  --text-secondary: 18 13% 37%;      /* #6D5D52 - coffee brown */
+  --text-muted: 15 11% 52%;          /* #9D8B7F - faded text */
+  --text-disabled: 15 10% 62%;       /* #B8A89C - very faded */
+  --accent: 25 32% 42%;              /* #8B6F47 - deep sepia */
+  --accent-light: 32 32% 60%;        /* #C4A57B - aged gold */
+  --accent-dark: 20 33% 33%;         /* #6B5535 - very dark brown */
+  --accent-muted: 25 32% 42% / 0.12;
+}
+
+.dark {
+  /* ── DARK MODE ── */
+  --bg: 0 0% 12%;                    /* #1F1F1F - charcoal */
+  --surface: 0 0% 18%;               /* #2D2D2D - dark gray */
+  --surface-raised: 0 0% 22%;        /* #383838 - raised surface */
+  --surface-elevated: 0 0% 28%;      /* #474747 - elevated */
+  --border: 0 0% 32%;                /* #525252 - subtle border */
+  --border-subtle: 0 0% 22%;         /* #383838 - very subtle */
+  --border-active: 32 68% 60%;       /* #D4A574 - warm gold accent */
+  --text-primary: 0 0% 95%;          /* #F2F2F2 - light text */
+  --text-secondary: 0 0% 80%;        /* #CCCCCC - secondary text */
+  --text-muted: 0 0% 60%;            /* #999999 - muted text */
+  --text-disabled: 0 0% 45%;         /* #737373 - disabled text */
+  --accent: 32 68% 60%;              /* #D4A574 - warm amber */
+  --accent-light: 39 86% 65%;        /* #F4C181 - light gold */
+  --accent-dark: 28 40% 45%;         /* #8B6F47 - darker sepia */
+  --accent-muted: 32 68% 60% / 0.12;
+}
+
+/* ─── Base reset ─────────────────────────────────────────── */
+@layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    @apply scroll-smooth;
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-background text-text-primary antialiased;
+    font-feature-settings: 'cv11', 'ss01';
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection {
+    @apply bg-accent-muted text-accent-light;
+  }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-accent/50 ring-offset-2 ring-offset-background;
+  }
+
+  /* Slim, warm-toned scrollbar */
+  ::-webkit-scrollbar       { @apply w-1.5 h-1.5; }
+  ::-webkit-scrollbar-track { @apply bg-surface; }
+  ::-webkit-scrollbar-thumb { @apply bg-border-active rounded-full; }
+  ::-webkit-scrollbar-thumb:hover { @apply bg-accent/60; }
+}
+
+/* ─── Component layer ────────────────────────────────────── */
+@layer components {
+
+  /* ── Typing area characters ─── */
+  .char {
+    @apply relative inline-block;
+    transition: color 60ms ease;
+    white-space: pre;
+  }
+  .char-idle    { @apply text-text-disabled; }
+  .char-correct { @apply text-correct; }
+  .char-wrong   { @apply text-wrong; }
+  .char-extra   { @apply text-wrong underline decoration-dotted decoration-wrong/60; }
+
+  /* ── Word shake on error ─── */
+  .word-error {
+    animation: shake 0.25s ease-in-out;
+  }
+
+  /* ── Vintage wood card — classical coffee house aesthetic ─── */
+  .glass-card {
+    @apply relative bg-surface/95 backdrop-blur-sm
+           border-2 border-border-active/40 rounded-lg;
+    box-shadow: 
+      0 0 0 1px rgba(139,111,71,0.15),
+      0 4px 12px rgba(62,39,35,0.08),
+      inset 0 1px 0 rgba(255,255,255,0.3);
+    background: linear-gradient(135deg, var(--tw-colors-surface) 0%, var(--tw-colors-surface-raised) 100%);
+    position: relative;
+  }
+  
+  .glass-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: 
+      linear-gradient(90deg, transparent 0%, rgba(139,111,71,0.02) 50%, transparent 100%),
+      repeating-linear-gradient(0deg, transparent 0px, rgba(139,111,71,0.01) 1px, transparent 2px);
+    pointer-events: none;
+    border-radius: inherit;
+  }
+
+  /* ── Stat pill ─── */
+  .stat-pill {
+    @apply flex flex-col items-center gap-0.5
+           bg-surface-raised/80 border-2 border-border-active/30
+           rounded-lg px-5 py-3;
+    box-shadow: 0 2px 4px rgba(62,39,35,0.08);
+  }
+  .stat-value  { @apply text-2xl font-semibold text-text-primary font-mono tabular-nums; }
+  .stat-label  { @apply text-xs font-medium text-text-secondary uppercase tracking-widest; }
+
+  /* ── Ad slot containers (reserved, prevents CLS) ─── */
+  .ad-slot {
+    contain: layout style;
+    @apply flex items-center justify-center
+           bg-surface/40 border border-dashed border-border-active/20
+           rounded-lg overflow-hidden;
+  }
+  .ad-slot-banner  { @apply w-full h-[90px]; }
+  .ad-slot-sidebar { @apply w-[160px] min-h-[600px]; }
+  .ad-slot-rect    { @apply w-[300px] h-[250px]; }
+
+  /* ── Level badge ─── */
+  .level-badge {
+    @apply inline-flex items-center gap-1.5 rounded-full
+           px-3 py-1 text-xs font-semibold
+           bg-accent-muted text-accent-light border border-accent/25;
+  }
+
+  /* ── Mode tab ─── */
+  .mode-tab {
+    @apply px-4 py-1.5 rounded-full text-sm font-medium
+           text-text-muted transition-all duration-150
+           hover:text-text-secondary cursor-pointer;
+  }
+  .mode-tab-active {
+    @apply bg-accent-muted text-accent-light
+           ring-1 ring-accent/35;
+  }
+
+  /* ── Progress bar track ─── */
+  .progress-track {
+    @apply h-2 w-full rounded-full bg-surface-raised overflow-hidden;
+  }
+  .progress-fill {
+    @apply h-full rounded-full bg-gradient-to-r from-accent to-caret
+           transition-all duration-300 ease-out;
+  }
+}
+
+/* ─── Utilities ──────────────────────────────────────────── */
+@layer utilities {
+  .text-gradient {
+    @apply bg-clip-text text-transparent
+           bg-gradient-to-r from-accent-light to-caret;
+  }
+
+  .bg-grid {
+    background-image:
+      linear-gradient(rgba(217,119,6,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(217,119,6,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  /* Subtle coffee noise texture */
+  .bg-noise {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+    background-size: 200px 200px;
+  }
+
+  .glow-text {
+    text-shadow: 0 0 14px currentColor, 0 0 28px rgba(217,119,6,0.4);
+  }
+
+  .no-select {
+    @apply select-none pointer-events-none;
+  }
+
+  /* Tabular numbers for live counters */
+  .tabular { font-variant-numeric: tabular-nums; }
+}

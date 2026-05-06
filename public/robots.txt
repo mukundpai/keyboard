@@ -1,0 +1,22 @@
+# Allow all search engines to crawl the site
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /api/internal
+Disallow: /_next
+Disallow: /.next
+
+# Specific rules for Googlebot
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 0
+
+# Block specific bad bots
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: AhrefsBot
+Disallow: /
+
+# Sitemap location
+Sitemap: https://keymaster.pro/sitemap.xml

@@ -36,15 +36,32 @@ export function TypingEngine() {
     focusInput,
   } = useTypingEngine();
 
-  /* Auto-focus the hidden input on mount */
+  /* Compute finished state early for dependency arrays */
+  const isFinished = engineState === 'finished';
+
+  /* Auto-focus the hidden input on mount and when entering idle state */
   useEffect(() => {
     focusInput();
   }, [focusInput]);
 
-  const isFinished = engineState === 'finished';
+  /* Keep input focused while test is active or idle (MonkeyType style) */
+  useEffect(() => {
+    const handleWindowClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      // Don't focus if clicking on interactive elements (buttons, links, inputs)
+      if (!target.closest('button') && !target.closest('a') && !target.closest('input[type="radio"]') && !target.closest('input[type="button"]')) {
+        if (!isFinished) {
+          focusInput();
+        }
+      }
+    };
+
+    window.addEventListener('click', handleWindowClick);
+    return () => window.removeEventListener('click', handleWindowClick);
+  }, [focusInput, isFinished]);
 
   return (
-    <div className="w-full max-w-3xl mx-auto space-y-6">
+    <div className="w-full max-w-5xl mx-auto space-y-6">
 
       <CommandDeck />
 
@@ -71,8 +88,7 @@ export function TypingEngine() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, y: -12 }}
             transition={{ duration: 0.25 }}
-            className="glass-card p-6 sm:p-8 space-y-5 shadow-surface-lg"
-            onClick={focusInput}
+            className="glass-card p-8 sm:p-12 space-y-6 shadow-surface-lg cursor-text"
           >
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border-active/15 pb-4">
               <div>
@@ -81,7 +97,7 @@ export function TypingEngine() {
                 </p>
                 <p className="mt-1 text-sm text-text-secondary">
                   {engineState === 'idle'
-                    ? 'Warm up, center the cursor, then start the run.'
+                    ? 'Center yourself. Start typing whenever you\'re ready.'
                     : 'Locked in. Stay smooth and keep the streak alive.'}
                 </p>
               </div>
@@ -131,23 +147,6 @@ export function TypingEngine() {
 
               {/* Combo streak overlay */}
               <ComboStreak combo={combo} />
-
-              {/* Idle hint */}
-              <AnimatePresence>
-                {engineState === 'idle' && (
-                  <motion.p
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ delay: 0.4 }}
-                    className="absolute inset-0 flex items-center justify-center
-                               text-sm font-medium text-text-secondary pointer-events-none
-                               opacity-40 hover:opacity-100 transition-opacity duration-300"
-                  >
-                    Click here or start typing to begin
-                  </motion.p>
-                )}
-              </AnimatePresence>
             </div>
 
             {/* Hidden input — captures all keystrokes */}

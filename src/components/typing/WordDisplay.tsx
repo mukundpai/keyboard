@@ -23,7 +23,7 @@ const fontSizeCls = {
 };
 
 const LINE_HEIGHT_PX = 36; // must match --line-height-typing approx value
-const VISIBLE_LINES = 3;
+const VISIBLE_LINES = 5;
 
 export function WordDisplay({
   words,
@@ -58,18 +58,13 @@ export function WordDisplay({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentWordIndex]);
 
-  const isBlurred = engineState === 'idle';
-
   return (
     <div
-      className="relative select-none font-mono overflow-hidden"
+      className="relative select-none font-mono overflow-hidden rounded-lg border border-border-active/10 bg-background-secondary/30 p-4"
       style={{ height: `${LINE_HEIGHT_PX * VISIBLE_LINES}px` }}
       ref={scrollRef}
       role="presentation"
     >
-      {/* Gradient fade at top and bottom for the "scrolling text" effect */}
-      <div className="absolute inset-x-0 top-0 h-6 bg-gradient-to-b from-background to-transparent z-10 pointer-events-none" />
-      <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-background to-transparent z-10 pointer-events-none" />
 
       {/* Sliding word container */}
       <motion.div
@@ -77,7 +72,6 @@ export function WordDisplay({
         className={cn(
           'relative flex flex-wrap gap-x-[0.5ch] gap-y-0 leading-none',
           fontSizeCls[fontSize],
-          isBlurred && 'blur-[3px] opacity-40 pointer-events-none',
         )}
         animate={{ y: -offsetY }}
         transition={{ type: 'spring', stiffness: 300, damping: 32 }}

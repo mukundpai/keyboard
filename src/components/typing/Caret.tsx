@@ -63,11 +63,6 @@ export function Caret({
         className="w-[2px] bg-caret rounded-full animate-caret-blink"
         style={{ height: 'var(--line-height-typing, 2rem)' }}
       />
-      {/* Soft glow behind the caret */}
-      <div
-        className="absolute inset-0 w-[2px] bg-caret blur-[3px] opacity-60"
-        style={{ height: 'var(--line-height-typing, 2rem)' }}
-      />
     </motion.div>
   );
 }

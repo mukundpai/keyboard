@@ -21,7 +21,7 @@ export default function HomePage() {
           Race <span className="text-gradient">smarter</span>.
         </h1>
         <p className="text-sm text-text-secondary max-w-md mx-auto">
-          The premium typing test with real-time multiplayer, detailed analytics,
+          The premium typing test with detailed analytics, perfect form feedback,
           and a satisfying caret that moves like butter.
         </p>
       </div>
@@ -59,7 +59,7 @@ export default function HomePage() {
                 </h3>
               </div>
               <p className="text-sm text-text-secondary max-w-sm">
-                Share a unique link with friends and race against them in real-time. First one to the finish line wins. Perfect for bringing in new users.
+                Create record-based typing challenges. Share a link with friends. They submit their best WPM and accuracy. Compare scores.
               </p>
             </div>
             <Link

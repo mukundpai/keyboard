@@ -49,7 +49,7 @@ export default function ChallengePage() {
   const handleShare = async () => {
     if (!activeChallenge) return;
     
-    const text = `I just challenged you to a typing race on KeyMaster Pro! Can you beat my score? 🏎️`;
+    const text = `I just created a typing challenge on KeyMaster Pro. Can you beat my WPM? 🎯`;
     const shareData = {
       title: 'KeyMaster Pro Challenge',
       text,
@@ -84,10 +84,10 @@ export default function ChallengePage() {
             Challenge Hub
           </div>
           <h1 className="text-3xl sm:text-4xl font-bold text-text-primary font-serif">
-            Challenge Your Friends
+            Compare Your Records
           </h1>
           <p className="text-text-secondary max-w-md mx-auto">
-            Create a unique challenge link and race your friends. Share it, watch them crush (or get crushed), and build your community one typing race at a time.
+            Create a challenge link with your settings. Friends record their best score under those conditions. Then compare WPM, accuracy, and consistency.
           </p>
         </motion.div>
 
@@ -127,11 +127,11 @@ export default function ChallengePage() {
                   </div>
                 </div>
                 <p className="text-xs text-text-muted mt-4">
-                  Your friends will race using these exact settings.{' '}
+                  Your friends will attempt these settings and submit their results.{' '}
                   <Link href="/" className="text-accent hover:text-accent-light font-medium">
                     Customize
                   </Link>{' '}
-                  them first if needed.
+                  settings first if needed.
                 </p>
               </div>
 

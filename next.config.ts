@@ -4,7 +4,6 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   
   // Performance optimizations
-  swcMinify: true,
   productionBrowserSourceMaps: false,
   compress: true,
   

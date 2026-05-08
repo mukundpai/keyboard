@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Activity, Flame, Swords, Zap } from 'lucide-react';
 import { TypingEngine } from '@/components/typing/TypingEngine';
+import { HomeBackground } from '@/components/HomeBackground';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
@@ -9,7 +10,9 @@ export const metadata: Metadata = {
 
 export default function HomePage() {
   return (
-    <section className="flex flex-col items-center justify-center min-h-[calc(100dvh-11rem)] px-4 py-10">
+    <>
+      <HomeBackground />
+      <section className="relative z-10 flex flex-col items-center justify-center min-h-[calc(100dvh-11rem)] px-4 py-10">
       {/* Hero caption */}
       <div className="text-center mb-8 animate-slide-up">
         <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-accent/20 bg-accent-muted px-4 py-1.5 text-xs uppercase tracking-[0.28em] text-accent-light">
@@ -76,6 +79,7 @@ export default function HomePage() {
       {/* Core typing component */}
       <TypingEngine />
     </section>
+    </>
   );
 }
 

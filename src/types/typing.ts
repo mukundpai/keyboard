@@ -22,10 +22,23 @@ export type EngineState = 'idle' | 'active' | 'finished';
 /* ─── Per-character typing state ─────────────────────────── */
 export type CharState = 'idle' | 'correct' | 'wrong' | 'extra';
 
+export type TokenType =
+  | 'keyword'
+  | 'string'
+  | 'comment'
+  | 'number'
+  | 'function'
+  | 'type'
+  | 'operator'
+  | 'bracket'
+  | 'tag'
+  | 'plain';
+
 export interface CharData {
   char: string;
   state: CharState;
   typedChar?: string;
+  tokenType?: TokenType;
 }
 
 export interface WordData {

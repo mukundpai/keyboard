@@ -4,6 +4,11 @@ import { ThemeProvider } from 'next-themes';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { StoreHydration } from '@/components/StoreHydration';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { ToastContainer } from '@/components/ui/ToastContainer';
+import { SettingsPanel } from '@/components/SettingsPanel';
+import { KeyboardShortcuts } from '@/components/KeyboardShortcuts';
+import { SettingsProvider } from '@/components/SettingsProvider';
 import './globals.css';
 
 /* ─── Fonts (loaded via next/font for zero-CLS, self-hosted) ─── */
@@ -111,49 +116,57 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       className={`dark ${inter.variable} ${spaceMono.variable} ${syncopate.variable} ${merriweather.variable}`}
     >
       <body className="font-sans bg-background text-text-primary min-h-dvh flex flex-col antialiased">
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={true} storageKey="keymaster-theme">
-          <StoreHydration />
+        <ErrorBoundary>
+          <ThemeProvider attribute="class" defaultTheme="light" enableSystem={true} storageKey="keymaster-theme">
+            <SettingsProvider>
+              <StoreHydration />
 
-          {/* ── Ambient background ── */}
-          <div
-            className="fixed inset-0 pointer-events-none overflow-hidden -z-10"
-            aria-hidden="true"
-          >
-            {/* Warm sepia bloom — top left */}
-            <div className="absolute -top-48 -left-48 w-[600px] h-[600px] rounded-full bg-[#8B6F47]/15 blur-[140px]" />
-            {/* Aged gold glow — bottom right */}
-            <div className="absolute -bottom-32 -right-32 w-[500px] h-[500px] rounded-full bg-[#C4A57B]/12 blur-[120px]" />
-            {/* Cream center vignette */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] rounded-full bg-[#DCC5B3]/8 blur-[160px]" />
-          </div>
+              {/* ── Ambient background ── */}
+              <div
+                className="fixed inset-0 pointer-events-none overflow-hidden -z-10"
+                aria-hidden="true"
+              >
+                {/* Warm sepia bloom — top left */}
+                <div className="absolute -top-48 -left-48 w-[600px] h-[600px] rounded-full bg-[#8B6F47]/15 blur-[140px]" />
+                {/* Aged gold glow — bottom right */}
+                <div className="absolute -bottom-32 -right-32 w-[500px] h-[500px] rounded-full bg-[#C4A57B]/12 blur-[120px]" />
+                {/* Cream center vignette */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] rounded-full bg-[#DCC5B3]/8 blur-[160px]" />
+              </div>
 
-          {/* ── App chrome ── */}
-          <Header />
+              {/* ── App chrome ── */}
+              <Header />
 
-          <main className="flex-1 relative">
-            {children}
-          </main>
+              <main className="flex-1 relative">
+                {children}
+              </main>
 
-          <Footer />
+              <Footer />
 
-          {/* ─────────────────────────────────────────────────────────── *
-           *  AD SLOT — bottom banner                                      *
-           *  Reserved height (90px) prevents CLS when AdSense loads.      *
-           * ─────────────────────────────────────────────────────────── */}
-          <aside
-            className="w-full flex justify-center items-center py-2 px-4
-                       bg-surface/30 border-t border-border-active/20"
-            aria-label="Advertisement"
-          >
-            <div className="ad-slot ad-slot-banner max-w-[728px] w-full">
-              {/* Google AdSense slot — inject script here in production */}
-              <span className="text-[10px] text-text-muted/40 uppercase tracking-widest select-none">
-                ad
-              </span>
-            </div>
-          </aside>
+              {/* ─────────────────────────────────────────────────────────── *
+               *  AD SLOT — bottom banner                                      *
+               *  Reserved height (90px) prevents CLS when AdSense loads.      *
+               * ─────────────────────────────────────────────────────────── */}
+              <aside
+                className="w-full flex justify-center items-center py-2 px-4
+                           bg-surface/30 border-t border-border-active/20"
+                aria-label="Advertisement"
+              >
+                <div className="ad-slot ad-slot-banner max-w-[728px] w-full">
+                  {/* Google AdSense slot — inject script here in production */}
+                  <span className="text-[10px] text-text-muted/40 uppercase tracking-widest select-none">
+                    ad
+                  </span>
+                </div>
+              </aside>
 
-        </ThemeProvider>
+              {/* UI Components */}
+              <ToastContainer />
+              <SettingsPanel />
+              <KeyboardShortcuts />
+            </SettingsProvider>
+          </ThemeProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );

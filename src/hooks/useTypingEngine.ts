@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTypingStore } from '@/store/typingStore';
 import { generateWords } from '@/lib/words';
 import { getCodeSnippet } from '@/lib/codeSnippets';
+import { tokenize } from '@/lib/syntaxHighlight';
 import {
   calculateWPM,
   calculateRawWPM,
@@ -17,9 +18,18 @@ import type {
   EngineState,
   WpmSnapshot,
   TestResults,
+  CodeLanguage,
 } from '@/types/typing';
 
 /* ─── Public interface ──────────────────────────────────── */
+export type KeyPressState = 'correct' | 'wrong' | 'neutral';
+
+export interface LastKeyPress {
+  key: string;
+  state: KeyPressState;
+  seq: number;
+}
+
 export interface TypingEngineReturn {
   words: WordData[];
   currentWordIndex: number;
@@ -33,6 +43,7 @@ export interface TypingEngineReturn {
   errors: number;
   combo: number;
   results: TestResults | null;
+  lastKeyPress: LastKeyPress | null;
   containerRef: React.RefObject<HTMLDivElement | null>;
   inputRef: React.RefObject<HTMLInputElement | null>;
   handleKeyDown: (e: React.KeyboardEvent) => void;
@@ -40,7 +51,7 @@ export interface TypingEngineReturn {
   focusInput: () => void;
 }
 
-/* ─── Helper ─────────────────────────────────────────────── */
+/* ─── Helpers ────────────────────────────────────────────── */
 function buildWords(text: string): WordData[] {
   return text.split(' ').map((word, wi) => ({
     id: wi,
@@ -48,6 +59,35 @@ function buildWords(text: string): WordData[] {
     chars: word.split('').map((char) => ({
       char,
       state: 'idle' as CharState,
+    })),
+  }));
+}
+
+/** Build code words: each line is one "word", chars carry token types */
+function buildCodeWords(text: string, lang: CodeLanguage): WordData[] {
+  const tokenized = tokenize(text, lang);
+  const lines: { char: string; tokenType: CharData['tokenType'] }[][] = [[]];
+
+  for (const item of tokenized) {
+    if (item.char === '\n') {
+      lines.push([]);
+    } else {
+      lines[lines.length - 1].push(item);
+    }
+  }
+
+  // Drop trailing empty line if present
+  if (lines[lines.length - 1].length === 0 && lines.length > 1) {
+    lines.pop();
+  }
+
+  return lines.map((lineChars, wi) => ({
+    id: wi,
+    isCompleted: false,
+    chars: lineChars.map(({ char, tokenType }) => ({
+      char,
+      state: 'idle' as CharState,
+      tokenType,
     })),
   }));
 }
@@ -70,6 +110,8 @@ export function useTypingEngine(): TypingEngineReturn {
   const [combo, setCombo] = useState(0);
   const [results, setLocalResults] = useState<TestResults | null>(null);
   const [engineState, setLocalEngineState] = useState<EngineState>('idle');
+  const [lastKeyPress, setLastKeyPress] = useState<LastKeyPress | null>(null);
+  const lastKeySeqRef = useRef(0);
 
   /* ── Mutable refs (used inside callbacks to avoid stale closures) ── */
   const cwiRef = useRef(0);   // current word index
@@ -152,11 +194,37 @@ export function useTypingEngine(): TypingEngineReturn {
 
   /* ── Init / Reset ── */
   const initWords = useCallback(() => {
-    const cfg = configRef.current;
+    // Use getState() so we always see the latest config even when called
+    // immediately after setConfig() (before React re-renders/useEffect).
+    const cfg = useTypingStore.getState().config;
     let rawText: string;
 
     if (cfg.mode === 'code') {
-      rawText = getCodeSnippet(cfg.codeLanguage ?? 'python');
+      const lang = cfg.codeLanguage ?? 'python';
+      rawText = getCodeSnippet(lang);
+      const wordData = buildCodeWords(rawText, lang);
+      setWords(wordData);
+      setCWI(0);
+      setCCI(0);
+      cwiRef.current = 0;
+      cciRef.current = 0;
+      correctRef.current = 0;
+      totalRef.current = 0;
+      errRef.current = 0;
+      comboRef.current = 0;
+      historyRef.current = [];
+      startTimeRef.current = null;
+      setErrors(0);
+      setCombo(0);
+      setWpm(0);
+      setRawWpm(0);
+      setAccuracy(100);
+      setLocalResults(null);
+      setTimeElapsed(0);
+      setTimeLeft(null); // code mode has no time limit
+      setLastKeyPress(null);
+      lastKeySeqRef.current = 0;
+      return;
     } else {
       const count =
         cfg.mode === 'words'
@@ -187,6 +255,8 @@ export function useTypingEngine(): TypingEngineReturn {
     setLocalResults(null);
     setTimeElapsed(0);
     setTimeLeft(cfg.mode === 'time' ? (cfg.timeLimit ?? 60) : null);
+    setLastKeyPress(null);
+    lastKeySeqRef.current = 0;
   }, []);
 
   useEffect(() => {
@@ -274,6 +344,13 @@ export function useTypingEngine(): TypingEngineReturn {
     const wi = cwiRef.current;
     const ci = cciRef.current;
 
+    // Determine correctness for keyboard preview before mutating state
+    const currentWord = wordsRef.current[wi];
+    const isWithinWord = ci < currentWord.chars.length;
+    const isCorrect = isWithinWord && currentWord.chars[ci].char === key;
+    lastKeySeqRef.current += 1;
+    setLastKeyPress({ key: key.toLowerCase(), state: isCorrect ? 'correct' : 'wrong', seq: lastKeySeqRef.current });
+
     setWords((prev) => {
       const next = prev.map((w, i) => {
         if (i !== wi) return w;
@@ -320,6 +397,8 @@ export function useTypingEngine(): TypingEngineReturn {
   const handleBackspace = useCallback(() => {
     const ci = cciRef.current;
     const wi = cwiRef.current;
+    lastKeySeqRef.current += 1;
+    setLastKeyPress({ key: 'backspace', state: 'neutral', seq: lastKeySeqRef.current });
 
     if (ci === 0) {
       // Attempt to jump back to previous word if it has errors
@@ -366,6 +445,8 @@ export function useTypingEngine(): TypingEngineReturn {
     const ci = cciRef.current;
     const wi = cwiRef.current;
     if (ci === 0) return; // don't skip on empty word
+    lastKeySeqRef.current += 1;
+    setLastKeyPress({ key: 'space', state: 'neutral', seq: lastKeySeqRef.current });
 
     // Mark any untyped characters in current word as wrong
     setWords((prev) => {
@@ -402,6 +483,32 @@ export function useTypingEngine(): TypingEngineReturn {
     cciRef.current = 0;
   }, [finishTest]);
 
+  /* ── Code-mode: advance past an empty line or trigger handleSpace ── */
+  const handleCodeEnter = useCallback(() => {
+    const ci = cciRef.current;
+    const wi = cwiRef.current;
+    const currentLine = wordsRef.current[wi];
+
+    if (ci === 0 && (!currentLine || currentLine.chars.length === 0)) {
+      // Empty line: advance without error-marking
+      const nextWI = wi + 1;
+      setWords((prev) =>
+        prev.map((w, i) => (i === wi ? { ...w, isCompleted: true } : w)),
+      );
+      if (nextWI >= wordsRef.current.length) {
+        finishTest();
+      } else {
+        setCWI(nextWI);
+        setCCI(0);
+        cwiRef.current = nextWI;
+        cciRef.current = 0;
+      }
+      return;
+    }
+
+    handleSpace(); // handles normal line advancement + error marking
+  }, [finishTest, handleSpace]);
+
   /* ── Main key handler ── */
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -412,10 +519,11 @@ export function useTypingEngine(): TypingEngineReturn {
       if (e.ctrlKey || e.metaKey || e.altKey) return;
 
       const key = e.key;
+      const isCode = configRef.current.mode === 'code';
 
-      // Non-printing keys we handle explicitly
+      // Non-printing keys we handle explicitly (Tab handled separately)
       const ignored = [
-        'Shift', 'Control', 'Alt', 'Meta', 'CapsLock', 'Tab',
+        'Shift', 'Control', 'Alt', 'Meta', 'CapsLock',
         'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',
         'Home', 'End', 'PageUp', 'PageDown', 'Insert', 'Delete',
         'Escape', 'F1', 'F2', 'F3', 'F4', 'F5', 'F6',
@@ -436,10 +544,49 @@ export function useTypingEngine(): TypingEngineReturn {
         return;
       }
 
+      /* ── Tab: type leading indentation spaces in code mode ── */
+      if (key === 'Tab') {
+        e.preventDefault();
+        if (isCode && engineStateRef.current === 'active') {
+          const ci = cciRef.current;
+          const currentLine = wordsRef.current[cwiRef.current];
+          if (ci === 0 && currentLine) {
+            let spaceCount = 0;
+            for (const c of currentLine.chars) {
+              if (c.char === ' ') spaceCount++;
+              else break;
+            }
+            if (spaceCount > 0) {
+              playKeyTone('input');
+              for (let k = 0; k < spaceCount; k++) handleChar(' ');
+              return;
+            }
+          }
+        }
+        // Non-code or no indent: propagate so TabRestartListener can restart
+        return;
+      }
+
+      /* ── Enter: advance to next code line ── */
+      if (key === 'Enter') {
+        if (isCode) {
+          e.preventDefault();
+          playKeyTone('space');
+          handleCodeEnter();
+        }
+        return;
+      }
+
+      /* ── Space: regular char in code mode, word-advance in others ── */
       if (key === ' ') {
         e.preventDefault();
-        playKeyTone('space');
-        handleSpace();
+        if (isCode) {
+          playKeyTone('input');
+          handleChar(' ');
+        } else {
+          playKeyTone('space');
+          handleSpace();
+        }
         return;
       }
 
@@ -448,7 +595,7 @@ export function useTypingEngine(): TypingEngineReturn {
         handleChar(key);
       }
     },
-    [syncEngineState, startTimer, handleBackspace, handleSpace, handleChar, playKeyTone],
+    [syncEngineState, startTimer, handleBackspace, handleSpace, handleChar, handleCodeEnter, playKeyTone, finishTest],
   );
 
   /* ── Restart ── */
@@ -487,6 +634,7 @@ export function useTypingEngine(): TypingEngineReturn {
     errors,
     combo,
     results,
+    lastKeyPress,
     containerRef,
     inputRef,
     handleKeyDown,

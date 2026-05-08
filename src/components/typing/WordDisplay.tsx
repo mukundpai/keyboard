@@ -60,7 +60,7 @@ export function WordDisplay({
 
   return (
     <div
-      className="relative select-none font-mono overflow-hidden rounded-lg border border-border-active/10 bg-background-secondary/30 p-4"
+      className="relative select-none font-mono overflow-hidden rounded-lg border border-border-active/10 bg-surface-raised/30 p-4"
       style={{ height: `${LINE_HEIGHT_PX * VISIBLE_LINES}px` }}
       ref={scrollRef}
       role="presentation"

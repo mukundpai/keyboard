@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Keyboard, Trophy, User, Zap, Moon, Sun } from 'lucide-react';
 import { useUserStore } from '@/store/userStore';
+import { useSettingsStore } from '@/store/settingsStore';
 import { cn } from '@/lib/utils';
 
 const NAV = [
@@ -17,6 +18,7 @@ const NAV = [
 export default function Header() {
   const profile = useUserStore((s) => s.profile);
   const { theme, setTheme } = useTheme();
+  const { updateSettings } = useSettingsStore();
   const [mounted, setMounted] = useState(false);
 
   // Prevent hydration mismatch
@@ -66,7 +68,11 @@ export default function Header() {
           {/* Theme toggle */}
           {mounted && (
             <button
-              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              onClick={() => {
+                const next = theme === 'dark' ? 'light' : 'dark';
+                setTheme(next);
+                updateSettings({ theme: next });
+              }}
               className="p-1.5 rounded-lg text-text-secondary hover:text-text-primary
                          hover:bg-surface-raised transition-colors"
               title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}

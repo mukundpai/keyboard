@@ -1,20 +1,23 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { RotateCcw } from 'lucide-react';
+import { RotateCcw, Keyboard } from 'lucide-react';
 import { useTypingEngine } from '@/hooks/useTypingEngine';
 import { useTypingStore } from '@/store/typingStore';
 import { WordDisplay } from './WordDisplay';
+import { CodeDisplay } from './CodeDisplay';
 import { StatsBar } from './StatsBar';
 import { ModeSelector } from './ModeSelector';
 import { ComboStreak } from './ComboStreak';
 import { ResultsPanel } from './ResultsPanel';
 import { CommandDeck } from './CommandDeck';
+import { KeyboardPreview } from './KeyboardPreview';
 import { Button } from '@/components/ui/Button';
 
 export function TypingEngine() {
   const { config } = useTypingStore();
+  const [showKeyboard, setShowKeyboard] = useState(false);
 
   const {
     words,
@@ -29,6 +32,7 @@ export function TypingEngine() {
     errors,
     combo,
     results,
+    lastKeyPress,
     containerRef,
     inputRef,
     handleKeyDown,
@@ -133,17 +137,28 @@ export function TypingEngine() {
               </motion.div>
             )}
 
-            {/* Word display */}
+            {/* Word / Code display */}
             <div className="relative">
-              <WordDisplay
-                words={words}
-                currentWordIndex={currentWordIndex}
-                currentCharIndex={currentCharIndex}
-                engineState={engineState}
-                smoothCaret={config.smoothCaret}
-                fontSize={config.fontSize}
-                containerRef={containerRef}
-              />
+              {config.mode === 'code' ? (
+                <CodeDisplay
+                  words={words}
+                  currentWordIndex={currentWordIndex}
+                  currentCharIndex={currentCharIndex}
+                  engineState={engineState}
+                  smoothCaret={config.smoothCaret}
+                  containerRef={containerRef}
+                />
+              ) : (
+                <WordDisplay
+                  words={words}
+                  currentWordIndex={currentWordIndex}
+                  currentCharIndex={currentCharIndex}
+                  engineState={engineState}
+                  smoothCaret={config.smoothCaret}
+                  fontSize={config.fontSize}
+                  containerRef={containerRef}
+                />
+              )}
 
               {/* Combo streak overlay */}
               <ComboStreak combo={combo} />
@@ -162,8 +177,21 @@ export function TypingEngine() {
               readOnly={isFinished}
             />
 
-            {/* Restart shortcut hint */}
-            <div className="flex items-center justify-end">
+            {/* Footer row: keyboard toggle + restart hint */}
+            <div className="flex items-center justify-between">
+              <button
+                onClick={(e) => { e.stopPropagation(); setShowKeyboard((v) => !v); }}
+                title={showKeyboard ? 'Hide keyboard' : 'Show keyboard preview'}
+                className={`flex items-center gap-1.5 text-xs transition-colors ${
+                  showKeyboard
+                    ? 'text-accent-light'
+                    : 'text-text-muted hover:text-text-secondary'
+                }`}
+              >
+                <Keyboard size={12} />
+                <span>{showKeyboard ? 'keyboard on' : 'keyboard'}</span>
+              </button>
+
               <button
                 onClick={restart}
                 title="Restart (Tab)"
@@ -191,23 +219,56 @@ export function TypingEngine() {
         )}
       </AnimatePresence>
 
+      {/* Floating keyboard preview — outside the card so no border artifacts */}
+      <AnimatePresence>
+        {showKeyboard && !isFinished && (
+          <motion.div
+            key="kbd-preview"
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.22, ease: 'easeOut' }}
+            className="flex justify-center"
+          >
+            <KeyboardPreview
+              lastKeyPress={lastKeyPress}
+              engineState={engineState}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Tab key shortcut listener */}
-      <TabRestartListener onRestart={restart} />
+      <TabRestartListener
+        onRestart={restart}
+        engineState={engineState}
+        isCodeMode={config.mode === 'code'}
+      />
     </div>
   );
 }
 
 /* Listen for Tab key globally to restart test */
-function TabRestartListener({ onRestart }: { onRestart: () => void }) {
+function TabRestartListener({
+  onRestart,
+  engineState,
+  isCodeMode,
+}: {
+  onRestart: () => void;
+  engineState: string;
+  isCodeMode: boolean;
+}) {
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       if (e.key === 'Tab') {
         e.preventDefault();
+        // Don't restart mid-test in code mode (Tab is used for indentation)
+        if (isCodeMode && engineState === 'active') return;
         onRestart();
       }
     }
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [onRestart]);
+  }, [onRestart, engineState, isCodeMode]);
   return null;
 }

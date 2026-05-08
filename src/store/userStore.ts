@@ -13,47 +13,50 @@ interface UserState {
   clearProfile: () => void;
 }
 
-export const useUserStore = create<UserState>()(
-  devtools(
-    (set) => ({
-      profile: null,
-      isAuthenticated: false,
+const isDev = process.env.NODE_ENV === 'development';
 
-      setProfile: (profile) =>
-        set({ profile, isAuthenticated: true }),
+const storeImpl = (set: Parameters<typeof create<UserState>>[0]) => ({
+  profile: null as UserProfile | null,
+  isAuthenticated: false,
 
-      recordTest: (wpm, accuracy, xpGained) =>
-        set((s) => {
-          if (!s.profile) return s;
+  setProfile: (profile: UserProfile) =>
+    set({ profile, isAuthenticated: true }),
 
-          const newXP = s.profile.xp + xpGained;
-          const { level, xpToNextLevel } = xpToLevel(newXP);
-          const prevStats = s.profile.stats;
-          const n = prevStats.totalTests;
+  recordTest: (wpm: number, accuracy: number, xpGained: number) =>
+    set((s) => {
+      if (!s.profile) return s;
 
-          return {
-            profile: {
-              ...s.profile,
-              xp: newXP,
-              level,
-              xpToNextLevel,
-              stats: {
-                ...prevStats,
-                totalTests: n + 1,
-                bestWpm: Math.max(prevStats.bestWpm, wpm),
-                avgWpm: Math.round((prevStats.avgWpm * n + wpm) / (n + 1)),
-                avgAccuracy:
-                  Math.round(
-                    ((prevStats.avgAccuracy * n + accuracy) / (n + 1)) * 10,
-                  ) / 10,
-              },
-            },
-          };
-        }),
+      const newXP = s.profile.xp + xpGained;
+      const { level, xpToNextLevel } = xpToLevel(newXP);
+      const prevStats = s.profile.stats;
+      const n = prevStats.totalTests;
 
-      clearProfile: () =>
-        set({ profile: null, isAuthenticated: false }),
+      return {
+        profile: {
+          ...s.profile,
+          xp: newXP,
+          level,
+          xpToNextLevel,
+          stats: {
+            ...prevStats,
+            totalTests: n + 1,
+            bestWpm: Math.max(prevStats.bestWpm, wpm),
+            avgWpm: Math.round((prevStats.avgWpm * n + wpm) / (n + 1)),
+            avgAccuracy:
+              Math.round(
+                ((prevStats.avgAccuracy * n + accuracy) / (n + 1)) * 10,
+              ) / 10,
+          },
+        },
+      };
     }),
-    { name: 'user-store' },
-  ),
+
+  clearProfile: () =>
+    set({ profile: null, isAuthenticated: false }),
+});
+
+export const useUserStore = create<UserState>()(
+  isDev
+    ? devtools(storeImpl as Parameters<typeof devtools>[0], { name: 'user-store' })
+    : storeImpl as Parameters<typeof create<UserState>>[0],
 );

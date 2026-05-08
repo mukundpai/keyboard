@@ -1,21 +1,33 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Keyboard, X } from 'lucide-react';
 
 const SHORTCUTS = [
   { key: 'Tab', action: 'Restart test' },
   { key: 'Esc', action: 'Close modals' },
-  { key: 'Ctrl/Cmd + /​', action: 'Show shortcuts' },
-  { key: 'Ctrl/Cmd + K', action: 'Open command palette' },
+  { key: 'Ctrl / Cmd + /', action: 'Show shortcuts' },
+  { key: 'Ctrl / Cmd + K', action: 'Open command palette' },
 ];
 
 export function KeyboardShortcuts() {
   const [isOpen, setIsOpen] = useState(false);
 
-  // Listen for Ctrl+/ to open shortcuts
-  // This would be implemented in a hook or global listener
+  // Global Ctrl+/ (or Cmd+/) listener
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === '/') {
+        e.preventDefault();
+        setIsOpen((v) => !v);
+      }
+      if (e.key === 'Escape') {
+        setIsOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   return (
     <>

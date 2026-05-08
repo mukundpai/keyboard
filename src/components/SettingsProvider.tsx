@@ -3,20 +3,30 @@
 import { useEffect } from 'react';
 import { useTheme } from 'next-themes';
 import { useSettingsStore } from '@/store/settingsStore';
+import { useTypingStore } from '@/store/typingStore';
 
 /**
- * Bridges the persisted settings store to next-themes and the document.
- * Runs on every settings change so the UI stays in sync.
+ * Bridges the persisted settings store to next-themes, the typing engine,
+ * and the document. Runs on every settings change so the UI stays in sync.
  */
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const { setTheme } = useTheme();
   const { settings } = useSettingsStore();
+  const setConfig = useTypingStore((s) => s.setConfig);
 
   useEffect(() => {
-    // 'auto' → let next-themes follow the OS preference ('system')
+    // Theme: 'auto' → follow OS preference via next-themes 'system'
     setTheme(settings.theme === 'auto' ? 'system' : settings.theme);
 
-    // Apply font size
+    // Sync typing-engine config from settings store
+    setConfig({
+      soundEnabled: settings.soundEnabled,
+      smoothCaret: settings.smoothCaret,
+      showLiveWpm: settings.showStats,
+      fontSize: settings.fontSize,
+    });
+
+    // Apply font size CSS variable
     const root = document.documentElement;
     root.style.setProperty(
       '--font-size-base',
@@ -25,7 +35,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
 
     // Apply language
     document.documentElement.lang = settings.language;
-  }, [settings, setTheme]);
+  }, [settings, setTheme, setConfig]);
 
   return <>{children}</>;
 }

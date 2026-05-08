@@ -3,13 +3,31 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { useSettingsStore } from '@/store/settingsStore';
 import type { LastKeyPress, KeyPressState } from '@/hooks/useTypingEngine';
 
-const ROWS: string[][] = [
-  ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'],
-  ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l'],
-  ['z', 'x', 'c', 'v', 'b', 'n', 'm'],
-];
+/* ─── Layout maps ────────────────────────────────────────────────
+   Each layout stores the visible key labels (not physical positions).
+   The `activeKey` from the engine is the character the OS sends,
+   so for non-QWERTY OS layouts the highlight still works correctly.
+─────────────────────────────────────────────────────────────────── */
+const LAYOUTS: Record<string, string[][]> = {
+  qwerty: [
+    ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'],
+    ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l'],
+    ['z', 'x', 'c', 'v', 'b', 'n', 'm'],
+  ],
+  dvorak: [
+    ["'", ',', '.', 'p', 'y', 'f', 'g', 'c', 'r', 'l'],
+    ['a', 'o', 'e', 'u', 'i', 'd', 'h', 't', 'n', 's'],
+    [';', 'q', 'j', 'k', 'x', 'b', 'm', 'w', 'v', 'z'],
+  ],
+  colemak: [
+    ['q', 'w', 'f', 'p', 'g', 'j', 'l', 'u', 'y', ';'],
+    ['a', 'r', 's', 't', 'd', 'h', 'n', 'e', 'i', 'o'],
+    ['z', 'x', 'c', 'v', 'b', 'k', 'm'],
+  ],
+};
 
 interface KeyboardPreviewProps {
   lastKeyPress: LastKeyPress | null;
@@ -76,6 +94,8 @@ export function KeyboardPreview({ lastKeyPress, engineState }: KeyboardPreviewPr
   const [activeState, setActiveState] = useState<KeyPressState | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSeqRef = useRef(-1);
+  const keyboardLayout = useSettingsStore((s) => s.settings.keyboardLayout);
+  const rows = LAYOUTS[keyboardLayout] ?? LAYOUTS.qwerty;
 
   useEffect(() => {
     if (!lastKeyPress || lastKeyPress.seq === lastSeqRef.current) return;
@@ -100,19 +120,19 @@ export function KeyboardPreview({ lastKeyPress, engineState }: KeyboardPreviewPr
       style={{ opacity: engineState === 'active' ? 1 : 0.4, transition: 'opacity 0.3s' }}
     >
       <div className="flex gap-[3px]">
-        {ROWS[0].map((k) => (
+        {rows[0].map((k) => (
           <Key key={k} label={k} isActive={activeKey === k} activeState={activeKey === k ? activeState : null} />
         ))}
       </div>
 
       <div className="flex gap-[3px]" style={{ marginLeft: 11 }}>
-        {ROWS[1].map((k) => (
+        {rows[1].map((k) => (
           <Key key={k} label={k} isActive={activeKey === k} activeState={activeKey === k ? activeState : null} />
         ))}
       </div>
 
       <div className="flex gap-[3px]" style={{ marginLeft: 22 }}>
-        {ROWS[2].map((k) => (
+        {rows[2].map((k) => (
           <Key key={k} label={k} isActive={activeKey === k} activeState={activeKey === k ? activeState : null} />
         ))}
       </div>

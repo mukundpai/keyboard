@@ -1,5 +1,5 @@
 'use client';
-import { create } from 'zustand';
+import { create, type StateCreator } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import type { UserProfile } from '@/types/user';
 import { xpToLevel } from '@/lib/calculations';
@@ -15,8 +15,8 @@ interface UserState {
 
 const isDev = process.env.NODE_ENV === 'development';
 
-const storeImpl = (set: Parameters<typeof create<UserState>>[0]) => ({
-  profile: null as UserProfile | null,
+const storeImpl: StateCreator<UserState> = (set) => ({
+  profile: null,
   isAuthenticated: false,
 
   setProfile: (profile: UserProfile) =>
@@ -55,8 +55,4 @@ const storeImpl = (set: Parameters<typeof create<UserState>>[0]) => ({
     set({ profile: null, isAuthenticated: false }),
 });
 
-export const useUserStore = create<UserState>()(
-  isDev
-    ? devtools(storeImpl as Parameters<typeof devtools>[0], { name: 'user-store' })
-    : storeImpl as Parameters<typeof create<UserState>>[0],
-);
+export const useUserStore = create<UserState>()(storeImpl);

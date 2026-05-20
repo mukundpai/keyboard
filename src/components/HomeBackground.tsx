@@ -22,48 +22,48 @@ interface Orb {
 
 const ORBS: Orb[] = [
   {
-    size: 520,
-    x: '-8%',
-    y: '-5%',
-    dx: [0, 28, -12, 18, 0],
-    dy: [0, 22, 40, 12, 0],
-    duration: 38,
+    size: 600,
+    x: '-10%',
+    y: '-10%',
+    dx: [0, 40, -20, 30, 0],
+    dy: [0, 30, 50, 20, 0],
+    duration: 45,
     delay: 0,
-    color: 'rgba(212,165,116,0.07)',  // warm amber
-    blur: 90,
+    color: 'rgba(255,255,255,0.025)',  // very subtle white
+    blur: 120,
   },
   {
-    size: 400,
-    x: '65%',
-    y: '10%',
-    dx: [0, -22, 10, -30, 0],
-    dy: [0, 35, 12, -18, 0],
-    duration: 44,
-    delay: 6,
-    color: 'rgba(244,193,129,0.055)', // light gold
-    blur: 80,
-  },
-  {
-    size: 340,
-    x: '30%',
-    y: '60%',
-    dx: [0, 18, -8, 24, 0],
-    dy: [0, -18, 28, 6, 0],
-    duration: 50,
-    delay: 14,
-    color: 'rgba(139,111,71,0.065)',  // sepia brown
+    size: 500,
+    x: '60%',
+    y: '5%',
+    dx: [0, -30, 15, -40, 0],
+    dy: [0, 45, 15, -25, 0],
+    duration: 52,
+    delay: 7,
+    color: 'rgba(200,200,200,0.02)', // light gray
     blur: 100,
   },
   {
-    size: 280,
-    x: '82%',
-    y: '72%',
-    dx: [0, -14, 22, -6, 0],
-    dy: [0, -24, -10, 16, 0],
-    duration: 42,
-    delay: 20,
-    color: 'rgba(212,165,116,0.05)',  // amber again, smaller
-    blur: 70,
+    size: 450,
+    x: '20%',
+    y: '60%',
+    dx: [0, 25, -12, 35, 0],
+    dy: [0, -25, 35, 10, 0],
+    duration: 60,
+    delay: 15,
+    color: 'rgba(255,255,255,0.015)',  // faintest white
+    blur: 130,
+  },
+  {
+    size: 350,
+    x: '80%',
+    y: '65%',
+    dx: [0, -20, 30, -10, 0],
+    dy: [0, -30, -15, 20, 0],
+    duration: 50,
+    delay: 22,
+    color: 'rgba(150,150,150,0.02)',  // mid gray
+    blur: 90,
   },
 ];
 

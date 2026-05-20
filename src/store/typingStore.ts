@@ -1,5 +1,5 @@
 'use client';
-import { create } from 'zustand';
+import { create, type StateCreator } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import type { TestConfig, TestResults, EngineState, WpmSnapshot } from '@/types/typing';
 
@@ -29,7 +29,7 @@ export const DEFAULT_CONFIG: TestConfig = {
 
 const isDev = process.env.NODE_ENV === 'development';
 
-const storeImpl = (set: Parameters<typeof create<TypingState>>[0]) => ({
+const storeImpl: StateCreator<TypingState> = (set) => ({
   config: DEFAULT_CONFIG,
   engineState: 'idle' as EngineState,
   results: null,
@@ -49,9 +49,4 @@ const storeImpl = (set: Parameters<typeof create<TypingState>>[0]) => ({
     set({ engineState: 'idle', results: null, wpmHistory: [] }),
 });
 
-export const useTypingStore = create<TypingState>()(
-  isDev
-    ? devtools(storeImpl as Parameters<typeof devtools>[0], { name: 'typing-store' })
-    : storeImpl as Parameters<typeof create<TypingState>>[0],
-);
-
+export const useTypingStore = create<TypingState>()(storeImpl);

@@ -3,13 +3,16 @@ import { useEffect, useState } from 'react';
 import { useTheme } from 'next-themes';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Keyboard, Trophy, User, Zap, Moon, Sun } from 'lucide-react';
+import { Keyboard, Trophy, User, Zap, Moon, Sun, BookOpen } from 'lucide-react';
 import { useUserStore } from '@/store/userStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { cn } from '@/lib/utils';
 
+import Image from 'next/image';
+
 const NAV = [
   { href: '/',            label: 'Type',        Icon: Keyboard },
+  { href: '/learnings',   label: 'Learnings',   Icon: BookOpen },
   { href: '/arena',       label: 'Arena',       Icon: Zap },
   { href: '/leaderboard', label: 'Leaderboard', Icon: Trophy },
   { href: '/profile',     label: 'Profile',     Icon: User },
@@ -35,13 +38,12 @@ export default function Header() {
           <motion.div
             whileHover={{ rotate: -12, scale: 1.1 }}
             transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-            className="w-8 h-8 rounded-lg bg-accent/15 border border-accent/30
-                       flex items-center justify-center shadow-glow-sm"
+            className="w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center shadow-glow-sm border border-border-active/20"
           >
-            <Keyboard size={16} className="text-accent-light" />
+            <Image src="/logo.png" alt="KeyMaster Pro Logo" width={32} height={32} className="object-cover" />
           </motion.div>
-          <span className="text-sm font-bold text-text-primary tracking-widest uppercase font-display">
-            Key<span className="text-gradient">Master</span>
+          <span className="text-sm font-bold text-text-primary tracking-widest uppercase font-display hidden sm:inline-block">
+            Key<span className="text-gradient">Master</span> Pro
           </span>
         </Link>
 

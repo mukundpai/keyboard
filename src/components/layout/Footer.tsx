@@ -5,9 +5,14 @@ export default function Footer() {
   return (
     <footer className="border-t border-border-active/20 bg-background/60">
       <div className="mx-auto max-w-5xl px-4 py-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-        <p className="text-xs text-text-muted">
-          &copy; {new Date().getFullYear()} KeyMaster Pro
-        </p>
+        <div className="flex flex-col gap-1">
+          <p className="text-sm font-medium text-text-primary">
+            KeyMaster Pro <span className="text-text-muted text-xs">by MegaMinds</span>
+          </p>
+          <p className="text-xs text-text-muted flex items-center gap-1">
+            Made with <span className="text-red-500">❤️</span> in India
+          </p>
+        </div>
 
         <nav className="flex items-center gap-4" aria-label="Footer navigation">
           {[

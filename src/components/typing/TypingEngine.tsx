@@ -106,7 +106,7 @@ export function TypingEngine() {
                 </p>
               </div>
 
-              <div className="rounded-full border border-accent/20 bg-accent-muted px-3 py-1 text-xs font-medium text-accent-light">
+              <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-white shadow-glow-sm">
                 {config.mode === 'code'
                   ? `${config.codeLanguage} mode`
                   : config.mode === 'words'

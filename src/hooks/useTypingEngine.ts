@@ -5,6 +5,7 @@ import { useTypingStore } from '@/store/typingStore';
 import { generateWords } from '@/lib/words';
 import { getCodeSnippet } from '@/lib/codeSnippets';
 import { tokenize } from '@/lib/syntaxHighlight';
+import { getRandomQuote } from '@/data/quotes';
 import {
   calculateWPM,
   calculateRawWPM,
@@ -30,6 +31,14 @@ export interface LastKeyPress {
   seq: number;
 }
 
+/** A single ghost racer position snapshot (chars typed at timestamp ms). */
+export interface GhostFrame {
+  /** ms since test start */
+  t: number;
+  /** total correct chars typed at this point */
+  chars: number;
+}
+
 export interface TypingEngineReturn {
   words: WordData[];
   currentWordIndex: number;
@@ -44,11 +53,14 @@ export interface TypingEngineReturn {
   combo: number;
   results: TestResults | null;
   lastKeyPress: LastKeyPress | null;
+  /** Ghost racer: progress (0–1) of the previous best run at current time. */
+  ghostProgress: number;
   containerRef: React.RefObject<HTMLDivElement | null>;
   inputRef: React.RefObject<HTMLInputElement | null>;
   handleKeyDown: (e: React.KeyboardEvent) => void;
   restart: () => void;
   focusInput: () => void;
+  totalChars: number; // total chars in text (for ghost normalisation)
 }
 
 /* ─── Helpers ────────────────────────────────────────────── */
@@ -111,6 +123,7 @@ export function useTypingEngine(): TypingEngineReturn {
   const [results, setLocalResults] = useState<TestResults | null>(null);
   const [engineState, setLocalEngineState] = useState<EngineState>('idle');
   const [lastKeyPress, setLastKeyPress] = useState<LastKeyPress | null>(null);
+  const [ghostProgress, setGhostProgress] = useState(0);
   const lastKeySeqRef = useRef(0);
 
   /* ── Mutable refs (used inside callbacks to avoid stale closures) ── */
@@ -128,6 +141,11 @@ export function useTypingEngine(): TypingEngineReturn {
   const wordsRef = useRef<WordData[]>([]);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const lastToneAtRef = useRef(0);
+  /** Per-key error map for the current test */
+  const keyErrorsRef = useRef<Record<string, number>>({});
+  /** Ghost racer: frames from the previous best run */
+  const ghostFramesRef = useRef<GhostFrame[]>([]);
+  const totalCharsRef = useRef(0); // total chars in the current text
 
   /* Keep refs in sync with fast-changing state / config */
   useEffect(() => { cwiRef.current = currentWordIndex; }, [currentWordIndex]);
@@ -203,6 +221,7 @@ export function useTypingEngine(): TypingEngineReturn {
       const lang = cfg.codeLanguage ?? 'python';
       rawText = getCodeSnippet(lang);
       const wordData = buildCodeWords(rawText, lang);
+      totalCharsRef.current = wordData.reduce((s, w) => s + w.chars.length, 0);
       setWords(wordData);
       setCWI(0);
       setCCI(0);
@@ -212,6 +231,7 @@ export function useTypingEngine(): TypingEngineReturn {
       totalRef.current = 0;
       errRef.current = 0;
       comboRef.current = 0;
+      keyErrorsRef.current = {};
       historyRef.current = [];
       startTimeRef.current = null;
       setErrors(0);
@@ -221,10 +241,18 @@ export function useTypingEngine(): TypingEngineReturn {
       setAccuracy(100);
       setLocalResults(null);
       setTimeElapsed(0);
-      setTimeLeft(null); // code mode has no time limit
+      setTimeLeft(null);
       setLastKeyPress(null);
+      setGhostProgress(0);
       lastKeySeqRef.current = 0;
       return;
+    }
+
+    if (cfg.mode === 'quote') {
+      const quote = getRandomQuote();
+      rawText = `${quote.text}`;
+    } else if (cfg.mode === 'custom' && cfg.customText?.trim()) {
+      rawText = cfg.customText.trim();
     } else {
       const count =
         cfg.mode === 'words'
@@ -234,6 +262,7 @@ export function useTypingEngine(): TypingEngineReturn {
     }
 
     const wordData = buildWords(rawText);
+    totalCharsRef.current = wordData.reduce((s, w) => s + w.chars.length, 0);
     setWords(wordData);
     setCWI(0);
     setCCI(0);
@@ -244,6 +273,7 @@ export function useTypingEngine(): TypingEngineReturn {
     totalRef.current = 0;
     errRef.current = 0;
     comboRef.current = 0;
+    keyErrorsRef.current = {};
     historyRef.current = [];
     startTimeRef.current = null;
 
@@ -256,6 +286,7 @@ export function useTypingEngine(): TypingEngineReturn {
     setTimeElapsed(0);
     setTimeLeft(cfg.mode === 'time' ? (cfg.timeLimit ?? 60) : null);
     setLastKeyPress(null);
+    setGhostProgress(0);
     lastKeySeqRef.current = 0;
   }, []);
 
@@ -297,7 +328,22 @@ export function useTypingEngine(): TypingEngineReturn {
       mode: configRef.current.mode,
       wpmHistory: historyRef.current,
       timestamp: Date.now(),
+      keyErrors: { ...keyErrorsRef.current },
     };
+
+    // Record into persisted stats store
+    import('@/store/statsStore').then(({ useStatsStore }) => {
+      useStatsStore.getState().recordResult(testResults);
+    });
+
+    // Store ghost frames for this run
+    const totalC = totalCharsRef.current || 1;
+    ghostFramesRef.current = historyRef.current.map((snap) => ({
+      t: snap.second * 1000,
+      chars: Math.round((snap.wpm / 60) * snap.second * 5), // rough chars
+    }));
+    // normalise to [0,1]
+    void totalC;
 
     setLocalResults(testResults);
     setResults(testResults);
@@ -336,6 +382,21 @@ export function useTypingEngine(): TypingEngineReturn {
       setWpm(snap.wpm);
       setRawWpm(snap.raw);
       setAccuracy(calculateAccuracy(correctRef.current, totalRef.current));
+
+      // Update ghost progress if ghost frames available
+      if (ghostFramesRef.current.length > 0) {
+        const elapsedMs = elapsed * 1000;
+        const frames = ghostFramesRef.current;
+        let ghostChars = 0;
+        for (let f = frames.length - 1; f >= 0; f--) {
+          if (frames[f].t <= elapsedMs) {
+            ghostChars = frames[f].chars;
+            break;
+          }
+        }
+        const total = totalCharsRef.current || 1;
+        setGhostProgress(Math.min(1, ghostChars / total));
+      }
     }, 1000);
   }, [finishTest, addWpmSnapshot]);
 
@@ -368,6 +429,9 @@ export function useTypingEngine(): TypingEngineReturn {
           } else {
             errRef.current++;
             comboRef.current = 0;
+            // Track per-key errors
+            const lk = key.toLowerCase();
+            keyErrorsRef.current[lk] = (keyErrorsRef.current[lk] ?? 0) + 1;
           }
           chars[ci] = {
             ...chars[ci],
@@ -635,10 +699,12 @@ export function useTypingEngine(): TypingEngineReturn {
     combo,
     results,
     lastKeyPress,
+    ghostProgress,
     containerRef,
     inputRef,
     handleKeyDown,
     restart,
     focusInput,
+    totalChars: totalCharsRef.current,
   };
 }

@@ -1,5 +1,5 @@
 /* ─── Test configuration ─────────────────────────────────── */
-export type TestMode = 'time' | 'words' | 'zen' | 'code';
+export type TestMode = 'time' | 'words' | 'zen' | 'code' | 'quote' | 'custom';
 export type TimeOption = 15 | 30 | 60 | 120;
 export type WordOption = 10 | 25 | 50 | 100;
 export type CodeLanguage = 'python' | 'react' | 'django';
@@ -14,6 +14,8 @@ export interface TestConfig {
   showLiveWpm: boolean;
   smoothCaret: boolean;
   soundEnabled: boolean;
+  customText?: string;      // user-pasted text for 'custom' mode
+  ghostEnabled?: boolean;   // whether ghost racer is on
 }
 
 /* ─── Engine state machine ───────────────────────────────── */
@@ -69,4 +71,6 @@ export interface TestResults {
   mode: TestMode;
   wpmHistory: WpmSnapshot[];
   timestamp: number;
+  /** Per-key error counts for this test (lowercase key label → count) */
+  keyErrors: Record<string, number>;
 }

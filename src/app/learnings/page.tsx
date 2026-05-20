@@ -9,6 +9,7 @@ import {
   DRILLS, DRILL_GROUPS, DIFFICULTY_LABEL, DIFFICULTY_COLOR,
   type DrillDef, type DrillGroup, type DrillDifficulty,
 } from '@/data/drills';
+import WeakSpots from '@/components/learnings/WeakSpots';
 
 export const metadata: Metadata = {
   title: 'Learnings & Drills | KeyMaster Pro',
@@ -128,6 +129,9 @@ export default function LearningsPage() {
           );
         })}
       </div>
+
+      {/* ── Weak spots (client component reading statsStore) ── */}
+      <WeakSpots />
 
       {/* ── Technique reference ── */}
       <section className="mt-24 rounded-2xl border border-border-subtle bg-surface-raised/40 p-8">

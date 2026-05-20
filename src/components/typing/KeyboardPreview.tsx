@@ -32,6 +32,8 @@ const LAYOUTS: Record<string, string[][]> = {
 interface KeyboardPreviewProps {
   lastKeyPress: LastKeyPress | null;
   engineState: 'idle' | 'active' | 'finished';
+  /** When true, tint each key by the finger responsible for it */
+  showFingerGuide?: boolean;
 }
 
 interface KeyProps {
@@ -39,9 +41,11 @@ interface KeyProps {
   isActive: boolean;
   activeState: KeyPressState | null;
   width?: number;
+  /** Finger color tint (rgba string) when finger guide is on */
+  fingerColor?: string;
 }
 
-function Key({ label, isActive, activeState, width }: KeyProps) {
+function Key({ label, isActive, activeState, width, fingerColor }: KeyProps) {
   const glow =
     activeState === 'correct'
       ? '0 0 10px 2px rgba(212,165,116,0.7), 0 2px 6px rgba(0,0,0,0.35)'
@@ -76,7 +80,9 @@ function Key({ label, isActive, activeState, width }: KeyProps) {
         height: 20,
         background: isActive
           ? activeBg
-          : 'linear-gradient(to bottom, rgba(255,255,255,0.06), rgba(0,0,0,0.1))',
+          : fingerColor
+            ? fingerColor
+            : 'linear-gradient(to bottom, rgba(255,255,255,0.06), rgba(0,0,0,0.1))',
         border: `1px solid ${isActive ? activeBorder : 'rgba(255,255,255,0.07)'}`,
         boxShadow: isActive ? glow : '0 1px 2px rgba(0,0,0,0.3)',
       }}
@@ -89,7 +95,31 @@ function Key({ label, isActive, activeState, width }: KeyProps) {
   );
 }
 
-export function KeyboardPreview({ lastKeyPress, engineState }: KeyboardPreviewProps) {
+/* ─── Finger color guide ─────────────────────────────────────
+   Colors: pinky=red, ring=orange, middle=yellow, index=green, thumb=blue
+─────────────────────────────────────────────────────────────────── */
+const FINGER_COLORS: Record<string, string> = {
+  // Left pinky
+  q: 'rgba(239,68,68,0.18)', a: 'rgba(239,68,68,0.18)', z: 'rgba(239,68,68,0.18)',
+  // Left ring
+  w: 'rgba(249,115,22,0.18)', s: 'rgba(249,115,22,0.18)', x: 'rgba(249,115,22,0.18)',
+  // Left middle
+  e: 'rgba(234,179,8,0.18)', d: 'rgba(234,179,8,0.18)', c: 'rgba(234,179,8,0.18)',
+  // Left index
+  r: 'rgba(34,197,94,0.18)', f: 'rgba(34,197,94,0.18)', v: 'rgba(34,197,94,0.18)',
+  t: 'rgba(34,197,94,0.18)', g: 'rgba(34,197,94,0.18)', b: 'rgba(34,197,94,0.18)',
+  // Right index
+  y: 'rgba(34,197,94,0.18)', h: 'rgba(34,197,94,0.18)', n: 'rgba(34,197,94,0.18)',
+  u: 'rgba(34,197,94,0.18)', j: 'rgba(34,197,94,0.18)', m: 'rgba(34,197,94,0.18)',
+  // Right middle
+  i: 'rgba(234,179,8,0.18)', k: 'rgba(234,179,8,0.18)',
+  // Right ring
+  o: 'rgba(249,115,22,0.18)', l: 'rgba(249,115,22,0.18)',
+  // Right pinky
+  p: 'rgba(239,68,68,0.18)',
+};
+
+export function KeyboardPreview({ lastKeyPress, engineState, showFingerGuide = false }: KeyboardPreviewProps) {
   const [activeKey, setActiveKey] = useState<string | null>(null);
   const [activeState, setActiveState] = useState<KeyPressState | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -121,19 +151,19 @@ export function KeyboardPreview({ lastKeyPress, engineState }: KeyboardPreviewPr
     >
       <div className="flex gap-[3px]">
         {rows[0].map((k) => (
-          <Key key={k} label={k} isActive={activeKey === k} activeState={activeKey === k ? activeState : null} />
+          <Key key={k} label={k} isActive={activeKey === k} activeState={activeKey === k ? activeState : null} fingerColor={showFingerGuide ? FINGER_COLORS[k] : undefined} />
         ))}
       </div>
 
       <div className="flex gap-[3px]" style={{ marginLeft: 11 }}>
         {rows[1].map((k) => (
-          <Key key={k} label={k} isActive={activeKey === k} activeState={activeKey === k ? activeState : null} />
+          <Key key={k} label={k} isActive={activeKey === k} activeState={activeKey === k ? activeState : null} fingerColor={showFingerGuide ? FINGER_COLORS[k] : undefined} />
         ))}
       </div>
 
       <div className="flex gap-[3px]" style={{ marginLeft: 22 }}>
         {rows[2].map((k) => (
-          <Key key={k} label={k} isActive={activeKey === k} activeState={activeKey === k ? activeState : null} />
+          <Key key={k} label={k} isActive={activeKey === k} activeState={activeKey === k ? activeState : null} fingerColor={showFingerGuide ? FINGER_COLORS[k] : undefined} />
         ))}
       </div>
 

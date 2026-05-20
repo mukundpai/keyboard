@@ -13,11 +13,14 @@ import { ComboStreak } from './ComboStreak';
 import { ResultsPanel } from './ResultsPanel';
 import { CommandDeck } from './CommandDeck';
 import { KeyboardPreview } from './KeyboardPreview';
+import GhostRacer from './GhostRacer';
+import PaceGraph from './PaceGraph';
 import { Button } from '@/components/ui/Button';
 
 export function TypingEngine() {
   const { config } = useTypingStore();
   const [showKeyboard, setShowKeyboard] = useState(false);
+  const [showFingerGuide, setShowFingerGuide] = useState(false);
 
   const {
     words,
@@ -33,11 +36,13 @@ export function TypingEngine() {
     combo,
     results,
     lastKeyPress,
+    ghostProgress,
     containerRef,
     inputRef,
     handleKeyDown,
     restart,
     focusInput,
+    totalChars,
   } = useTypingEngine();
 
   /* Compute finished state early for dependency arrays */
@@ -113,7 +118,11 @@ export function TypingEngine() {
                     ? `${config.wordCount} words`
                     : config.mode === 'time'
                       ? `${config.timeLimit}s run`
-                      : 'zen mode'}
+                      : config.mode === 'quote'
+                        ? 'quote mode'
+                        : config.mode === 'custom'
+                          ? 'custom text'
+                          : 'zen mode'}
               </div>
             </div>
 
@@ -123,6 +132,7 @@ export function TypingEngine() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.1 }}
+                className="space-y-2"
               >
                 <StatsBar
                   wpm={wpm}
@@ -134,6 +144,14 @@ export function TypingEngine() {
                   showLiveWpm={config.showLiveWpm}
                   mode={config.mode}
                 />
+                {/* Ghost racer */}
+                <GhostRacer
+                  progress={ghostProgress}
+                  userProgress={totalChars > 0 ? Math.min(1, (words.reduce((s, w) => s + w.chars.filter(c => c.state === 'correct').length, 0)) / totalChars) : 0}
+                  enabled={!!config.ghostEnabled && ghostProgress > 0}
+                />
+                {/* Live pace graph */}
+                <PaceGraph wpmHistory={[]} />
               </motion.div>
             )}
 
@@ -192,6 +210,20 @@ export function TypingEngine() {
                 <span>{showKeyboard ? 'keyboard on' : 'keyboard'}</span>
               </button>
 
+              {showKeyboard && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); setShowFingerGuide((v) => !v); }}
+                  title="Toggle finger color guide"
+                  className={`flex items-center gap-1.5 text-xs transition-colors ${
+                    showFingerGuide
+                      ? 'text-indigo-400'
+                      : 'text-text-muted hover:text-text-secondary'
+                  }`}
+                >
+                  <span>{showFingerGuide ? 'fingers on' : 'finger guide'}</span>
+                </button>
+              )}
+
               <button
                 onClick={restart}
                 title="Restart (Tab)"
@@ -233,6 +265,7 @@ export function TypingEngine() {
             <KeyboardPreview
               lastKeyPress={lastKeyPress}
               engineState={engineState}
+              showFingerGuide={showFingerGuide}
             />
           </motion.div>
         )}

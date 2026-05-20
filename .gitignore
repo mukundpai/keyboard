@@ -3,3 +3,14 @@
 
 .next/
 node_modules/
+
+/src/generated/prisma
+
+# Environment variables — never commit secrets
+.env
+.env.local
+.env*.local
+
+# Admin / dev reference — contains credentials and internal notes
+ADMIN_README.md
+

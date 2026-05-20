@@ -3,9 +3,10 @@ import { useEffect, useState } from 'react';
 import { useTheme } from 'next-themes';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Keyboard, Trophy, User, Zap, Moon, Sun, BookOpen } from 'lucide-react';
+import { Keyboard, Trophy, User, Zap, Moon, Sun, BookOpen, LogOut } from 'lucide-react';
 import { useUserStore } from '@/store/userStore';
 import { useSettingsStore } from '@/store/settingsStore';
+import { signOut } from 'next-auth/react';
 import { cn } from '@/lib/utils';
 
 import Image from 'next/image';
@@ -31,7 +32,7 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-30 w-full border-b border-border-active/20 bg-background/85 backdrop-blur-md">
-      <div className="mx-auto max-w-5xl px-4 h-14 flex items-center justify-between gap-6">
+      <div className="mx-auto max-w-7xl px-6 h-14 flex items-center justify-between gap-6">
 
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 group">
@@ -85,14 +86,25 @@ export default function Header() {
           )}
 
           {profile ? (
-            <Link
-              href="/profile"
-              className="level-badge hover:bg-accent/20 transition-colors"
-            >
-              <span className="text-text-muted">Lv</span>
-              <span>{profile.level}</span>
-              <span className="text-text-secondary">{profile.username}</span>
-            </Link>
+            <div className="flex items-center gap-1">
+              <Link
+                href="/profile"
+                className="level-badge hover:bg-accent/20 transition-colors"
+              >
+                <span className="text-text-muted">Lv</span>
+                <span>{profile.level}</span>
+                <span className="text-text-secondary">{profile.username}</span>
+              </Link>
+              <button
+                onClick={() => signOut({ callbackUrl: '/' })}
+                title="Sign out"
+                aria-label="Sign out"
+                className="p-1.5 rounded-lg text-text-secondary hover:text-text-primary
+                           hover:bg-surface-raised transition-colors"
+              >
+                <LogOut size={15} />
+              </button>
+            </div>
           ) : (
             <Link
               href="/profile"

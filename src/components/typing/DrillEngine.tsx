@@ -2,8 +2,10 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { RotateCcw, ShieldCheck } from 'lucide-react';
+import { RotateCcw, ShieldCheck, Keyboard } from 'lucide-react';
 import type { DrillDef } from '@/data/drills';
+import { KeyboardPreview } from './KeyboardPreview';
+import type { LastKeyPress } from '@/hooks/useTypingEngine';
 
 export function DrillEngine({ drill }: { drill: DrillDef }) {
   const [engineState, setEngineState] = useState<'idle' | 'active' | 'finished'>('idle');
@@ -11,6 +13,10 @@ export function DrillEngine({ drill }: { drill: DrillDef }) {
   const [errors, setErrors] = useState(0);
   const [startTime, setStartTime] = useState<number | null>(null);
   const [endTime, setEndTime] = useState<number | null>(null);
+  const [showKeyboard, setShowKeyboard] = useState(false);
+  const [showFingerGuide, setShowFingerGuide] = useState(false);
+  const [lastKeyPress, setLastKeyPress] = useState<LastKeyPress | null>(null);
+  const lastKeySeqRef = useRef(0);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -52,9 +58,11 @@ export function DrillEngine({ drill }: { drill: DrillDef }) {
     }
 
     const expectedChar = targetChars[currentIndex];
-    
+    const seq = ++lastKeySeqRef.current;
+
     if (e.key === expectedChar) {
       // Correct character
+      setLastKeyPress({ key: e.key === ' ' ? 'space' : e.key.toLowerCase(), state: 'correct', seq });
       const nextIndex = currentIndex + 1;
       setCurrentIndex(nextIndex);
       
@@ -65,6 +73,7 @@ export function DrillEngine({ drill }: { drill: DrillDef }) {
       }
     } else {
       // Incorrect character
+      setLastKeyPress({ key: e.key === ' ' ? 'space' : e.key.toLowerCase(), state: 'wrong', seq });
       setErrors(e => e + 1);
     }
   };
@@ -75,6 +84,7 @@ export function DrillEngine({ drill }: { drill: DrillDef }) {
     setErrors(0);
     setStartTime(null);
     setEndTime(null);
+    setLastKeyPress(null);
     focusInput();
   };
 
@@ -152,7 +162,30 @@ export function DrillEngine({ drill }: { drill: DrillDef }) {
             />
 
             <div className="flex items-center justify-between mt-auto pt-6">
-              <span className="text-xs text-text-muted">Type the exact character to proceed.</span>
+              <div className="flex items-center gap-4">
+                <span className="text-xs text-text-muted">Type the exact character to proceed.</span>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setShowKeyboard((v) => !v); }}
+                  title={showKeyboard ? 'Hide keyboard' : 'Show keyboard preview'}
+                  className={`flex items-center gap-1.5 text-xs transition-colors ${
+                    showKeyboard ? 'text-accent-light' : 'text-text-muted hover:text-text-secondary'
+                  }`}
+                >
+                  <Keyboard size={12} />
+                  <span>{showKeyboard ? 'keyboard on' : 'keyboard'}</span>
+                </button>
+                {showKeyboard && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setShowFingerGuide((v) => !v); }}
+                    title="Toggle finger color guide"
+                    className={`flex items-center gap-1.5 text-xs transition-colors ${
+                      showFingerGuide ? 'text-indigo-400' : 'text-text-muted hover:text-text-secondary'
+                    }`}
+                  >
+                    <span>{showFingerGuide ? 'fingers on' : 'finger guide'}</span>
+                  </button>
+                )}
+              </div>
               <button
                 onClick={handleRestart}
                 className="flex items-center gap-1.5 text-xs text-text-muted hover:text-text-secondary transition-colors"
@@ -188,11 +221,31 @@ export function DrillEngine({ drill }: { drill: DrillDef }) {
 
             <button
               onClick={handleRestart}
-              className="flex items-center gap-2 px-6 py-3 rounded-lg bg-white/10 border border-white/10 text-white font-medium hover:bg-white/20 transition-colors shadow-glow-sm"
+              className="flex items-center gap-2 px-6 py-3 rounded-lg bg-surface-raised border border-border-active/40 text-text-primary font-medium hover:bg-surface-elevated transition-colors shadow-glow-sm"
             >
               <RotateCcw size={16} />
               Run Again
             </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Floating keyboard preview */}
+      <AnimatePresence>
+        {showKeyboard && engineState !== 'finished' && (
+          <motion.div
+            key="kbd-preview"
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.22, ease: 'easeOut' }}
+            className="flex justify-center"
+          >
+            <KeyboardPreview
+              lastKeyPress={lastKeyPress}
+              engineState={engineState}
+              showFingerGuide={showFingerGuide}
+            />
           </motion.div>
         )}
       </AnimatePresence>

@@ -4,6 +4,7 @@ import { ThemeProvider } from 'next-themes';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { StoreHydration } from '@/components/StoreHydration';
+import { Providers } from '@/components/Providers';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { ToastContainer } from '@/components/ui/ToastContainer';
 import { SettingsPanel } from '@/components/SettingsPanel';
@@ -117,6 +118,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     >
       <body className="font-sans bg-background text-text-primary min-h-dvh flex flex-col antialiased">
         <ErrorBoundary>
+          <Providers>
           <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={true} storageKey="keymaster-theme">
             <SettingsProvider>
               <StoreHydration />
@@ -153,6 +155,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <KeyboardShortcuts />
             </SettingsProvider>
           </ThemeProvider>
+          </Providers>
         </ErrorBoundary>
       </body>
     </html>

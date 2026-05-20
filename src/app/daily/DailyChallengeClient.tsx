@@ -32,7 +32,7 @@ export default function DailyChallengeClient() {
   }), [quote]);
 
   return (
-    <section className="mx-auto max-w-3xl px-4 py-10 space-y-8">
+    <section className="mx-auto max-w-4xl px-6 py-10 space-y-8">
       {/* Hero */}
       <div className="glass-card p-6 space-y-2 animate-slide-up">
         <div className="flex items-center gap-2 mb-1">

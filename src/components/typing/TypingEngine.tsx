@@ -111,7 +111,7 @@ export function TypingEngine() {
                 </p>
               </div>
 
-              <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-white shadow-glow-sm">
+              <div className="rounded-full border border-border-active/20 bg-surface-raised px-3 py-1 text-xs font-medium text-text-secondary shadow-glow-sm">
                 {config.mode === 'code'
                   ? `${config.codeLanguage} mode`
                   : config.mode === 'words'

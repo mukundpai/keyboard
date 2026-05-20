@@ -133,7 +133,7 @@
   /* ── Stat pill ─── */
   .stat-pill {
     @apply flex flex-col items-center gap-0.5
-           bg-surface/50 backdrop-blur-md border border-white/5
+           bg-surface/50 backdrop-blur-md border border-border-subtle
            rounded-lg px-5 py-3;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   }
@@ -155,7 +155,7 @@
   .level-badge {
     @apply inline-flex items-center gap-1.5 rounded-full
            px-3 py-1 text-xs font-semibold
-           bg-white/10 text-white border border-white/20;
+           bg-accent-muted text-text-primary border border-border-active/40;
   }
 
   /* ── Mode tab ─── */
@@ -165,8 +165,8 @@
            hover:text-text-primary cursor-pointer;
   }
   .mode-tab-active {
-    @apply bg-white/10 text-white
-           ring-1 ring-white/20 shadow-glow-sm;
+    @apply bg-surface-elevated text-text-primary
+           ring-1 ring-border-active/40 shadow-glow-sm;
   }
 
   /* ── Progress bar track ─── */
@@ -182,8 +182,8 @@
 /* ─── Utilities ──────────────────────────────────────────── */
 @layer utilities {
   .text-gradient {
-    @apply bg-clip-text text-transparent
-           bg-gradient-to-r from-white to-text-muted;
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(to right, hsl(var(--text-primary)), hsl(var(--text-muted)));
   }
 
   .bg-grid {

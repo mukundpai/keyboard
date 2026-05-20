@@ -4,7 +4,7 @@ import { Github, Twitter } from 'lucide-react';
 export default function Footer() {
   return (
     <footer className="border-t border-border-active/20 bg-background/60">
-      <div className="mx-auto max-w-5xl px-4 py-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div className="mx-auto max-w-7xl px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-3">
         <div className="flex flex-col gap-1">
           <p className="text-sm font-medium text-text-primary">
             KeyMaster Pro <span className="text-text-muted text-xs">by MegaMinds</span>

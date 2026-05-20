@@ -6,6 +6,10 @@ import type { ArenaRoom, ArenaPlayer } from '@/types/arena';
 interface ArenaState {
   room: ArenaRoom | null;
   localPlayerId: string | null;
+  /** null = no countdown; 0 = GO; 1-3 = countdown ticking */
+  countdown: number | null;
+  /** Error message from the server (room full, not found, etc.) */
+  serverError: string | null;
 
   setRoom: (room: ArenaRoom) => void;
   patchRoom: (updates: Partial<ArenaRoom>) => void;
@@ -18,6 +22,9 @@ interface ArenaState {
     wpm: number,
     accuracy: number,
   ) => void;
+  markFinished: (id: string, rank: number, wpm: number, accuracy: number) => void;
+  setCountdown: (n: number | null) => void;
+  setServerError: (msg: string | null) => void;
   clearRoom: () => void;
 }
 
@@ -26,6 +33,8 @@ export const useArenaStore = create<ArenaState>()(
     (set) => ({
       room: null,
       localPlayerId: null,
+      countdown: null,
+      serverError: null,
 
       setRoom: (room) => set({ room }),
 
@@ -67,7 +76,25 @@ export const useArenaStore = create<ArenaState>()(
             : null,
         })),
 
-      clearRoom: () => set({ room: null, localPlayerId: null }),
+      markFinished: (id, rank, wpm, accuracy) =>
+        set((s) => ({
+          room: s.room
+            ? {
+                ...s.room,
+                players: s.room.players.map((p) =>
+                  p.id === id
+                    ? { ...p, isFinished: true, progress: 100, rank, wpm, accuracy, finishedAt: Date.now() }
+                    : p,
+                ),
+              }
+            : null,
+        })),
+
+      setCountdown: (n) => set({ countdown: n }),
+
+      setServerError: (msg) => set({ serverError: msg }),
+
+      clearRoom: () => set({ room: null, localPlayerId: null, countdown: null, serverError: null }),
     }),
     { name: 'arena-store' },
   ),

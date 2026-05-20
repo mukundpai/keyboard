@@ -26,7 +26,7 @@ function modeLabel(mode: string): string {
   return m[mode] ?? mode;
 }
 
-export default function ProfileClient() {
+export default function ProfileClient({ userName, userEmail }: { userName?: string | null; userEmail?: string | null }) {
   const history = useStatsStore((s) => s.history);
   const totalTests = history.length;
   const bestWpm = useStatsStore(selectBestWpm);
@@ -36,7 +36,7 @@ export default function ProfileClient() {
   const recentTests = history.slice(0, 10);
 
   return (
-    <section className="mx-auto max-w-5xl px-4 py-10">
+    <section className="mx-auto max-w-7xl px-6 py-10">
 
       {/* Header */}
       <div className="glass-card p-6 mb-6 flex items-center gap-5 animate-slide-up">
@@ -45,7 +45,8 @@ export default function ProfileClient() {
           <User size={28} className="text-indigo-400" />
         </div>
         <div className="flex-1">
-          <h1 className="text-xl font-bold text-text-primary">Your Profile</h1>
+          <h1 className="text-xl font-bold text-text-primary">{userName ?? 'Your Profile'}</h1>
+          {userEmail && <p className="text-xs text-muted">{userEmail}</p>}
           <p className="text-sm text-muted mt-0.5">
             {totalTests > 0
               ? `${totalTests} test${totalTests !== 1 ? 's' : ''} completed · ${formatDuration(totalSeconds)} total practice`

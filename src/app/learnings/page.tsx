@@ -45,7 +45,7 @@ export default function LearningsPage() {
   );
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-12 sm:py-20 animate-fade-in">
+    <div className="mx-auto max-w-7xl px-6 py-12 sm:py-20 animate-fade-in">
       {/* ── Hero ── */}
       <div className="mb-14">
         <p className="text-xs font-semibold tracking-widest uppercase text-accent mb-3">

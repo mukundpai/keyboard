@@ -131,7 +131,7 @@ export default function ShortcutQuizClient() {
   }
 
   return (
-    <section className="mx-auto max-w-2xl px-4 py-10 space-y-8">
+    <section className="mx-auto max-w-3xl px-6 py-10 space-y-8">
       {/* Header */}
       <div className="glass-card p-6 animate-slide-up">
         <div className="flex items-center gap-2 mb-1">
@@ -149,7 +149,7 @@ export default function ShortcutQuizClient() {
       {/* Progress */}
       {!done && (
         <div className="flex items-center gap-3 text-sm">
-          <div className="flex-1 h-1.5 rounded-full bg-white/10 overflow-hidden">
+            <div className="flex-1 h-1.5 rounded-full bg-surface-elevated overflow-hidden">
             <motion.div
               className="h-full bg-indigo-500 rounded-full"
               animate={{ width: `${((index) / deck.length) * 100}%` }}

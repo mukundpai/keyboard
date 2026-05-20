@@ -3,6 +3,9 @@
 import type { Socket } from 'socket.io-client';
 
 let socket: Socket | null = null;
+// Tracks whether event listeners have been bound to the socket singleton.
+// Prevents duplicate handlers when multiple components call connect().
+let listenersSetUp = false;
 
 export async function getSocket(): Promise<Socket> {
   if (typeof window === 'undefined') {
@@ -28,6 +31,15 @@ export async function connectSocket(): Promise<Socket> {
   return s;
 }
 
+export function areListenersSetUp(): boolean {
+  return listenersSetUp;
+}
+
+export function markListenersSetUp(): void {
+  listenersSetUp = true;
+}
+
 export function disconnectSocket(): void {
   socket?.disconnect();
+  listenersSetUp = false;
 }
